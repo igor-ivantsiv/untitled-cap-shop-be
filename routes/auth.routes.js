@@ -8,11 +8,12 @@ const { isAuthenticated, authorizeRole } = require("../middlewares/route-guard.m
 // register
 router.post("/register", async (req, res, next) => {
   const salt = bcrypt.genSaltSync(13);
-  const passwordHash = bcrypt.hashSync(req.body.password, salt);
+  console.log("REG BODY: ", req.body)
+  const passwordHash = bcrypt.hashSync(req.body.values.password, salt);
 
   try {
     const newUser = await User.create({
-      ...req.body,
+      ...req.body.values,
       passwordHash,
     });
 
@@ -60,7 +61,7 @@ router.get("/verify/admin", isAuthenticated, authorizeRole, (req, res, next) => 
     res.status(200).json({message: "admin token validated"})
 })
 
-/* // get all users (test)
+// get all users (test)
 router.get("/", async (req, res, next) => {
   try {
     const users = await User.find();
@@ -69,6 +70,6 @@ router.get("/", async (req, res, next) => {
     next(error);
   }
 });
-*/
+
 
 module.exports = router;
