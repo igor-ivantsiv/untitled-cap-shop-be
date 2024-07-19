@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const router = require("express").Router();
 
 const User = require("../models/User.model");
-const { isAuthenticated } = require("../middlewares/route-guard.middleware");
+const { isAuthenticated, authorizeRole } = require("../middlewares/route-guard.middleware");
 
 // register
 router.post("/register", async (req, res, next) => {
@@ -54,6 +54,11 @@ router.get("/verify", isAuthenticated, (req, res, next) => {
   //res.status(200).json(req.tokenPayload);
   res.status(200).json({message: "token validated"})
 });
+
+router.get("/verify/admin", isAuthenticated, authorizeRole, (req, res, next) => {
+    //res.status(200).json(req.tokenPayload);
+    res.status(200).json({message: "admin token validated"})
+})
 
 /* // get all users (test)
 router.get("/", async (req, res, next) => {

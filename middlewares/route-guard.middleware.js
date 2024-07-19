@@ -14,6 +14,14 @@ const isAuthenticated = (req, res, next) => {
   }
 };
 
-module.exports = { 
-    isAuthenticated, 
-}
+const authorizeRole = (req, res, next) => {
+  if (req.tokenPayload.role !== "admin") {
+    return res.status(403).json({ message: "unauthorized" });
+  }
+  next();
+};
+
+module.exports = {
+  isAuthenticated,
+  authorizeRole
+};
