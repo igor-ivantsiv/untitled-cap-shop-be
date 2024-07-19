@@ -10,5 +10,7 @@ router.use("/products", productsRoutes);
 const stocksRoutes = require("./stocks.routes");
 router.use("/stocks", stocksRoutes);
 
+const ordersRoutes = require("./orders.routes");
+router.use("/orders", ordersRoutes);
 
 module.exports = router
