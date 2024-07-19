@@ -22,13 +22,13 @@ const userSchema = new Schema(
       trim: true,
     },
     role: {
-        type: String,
-        enum: ["user", "admin"],
-        required: true,
-        default: "user",
-        lowercase: true,
-        trim: true,
-    }
+      type: String,
+      enum: ["user", "admin"],
+      required: true,
+      default: "user",
+      lowercase: true,
+      trim: true,
+    },
   },
   {
     timestamps: true,

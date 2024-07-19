@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const router = require("express").Router();
 
 const User = require("../models/User.model");
+const { isAuthenticated } = require("../middlewares/route-guard.middleware");
 
 // register
 router.post("/register", async (req, res, next) => {
@@ -40,9 +41,8 @@ router.post("/login", async (req, res, next) => {
       });
 
       res.status(200).json({ token });
-    }
-    else {
-        res.status(403).json({ message: "incorrect password or username"})
+    } else {
+      res.status(403).json({ message: "incorrect password or username" });
     }
   } catch (error) {
     next(error);
@@ -50,14 +50,20 @@ router.post("/login", async (req, res, next) => {
 });
 
 // verify
+router.get("/verify", isAuthenticated, (req, res, next) => {
+  //res.status(200).json(req.tokenPayload);
+  res.status(200).json({message: "token validated"})
+});
 
+/* // get all users (test)
 router.get("/", async (req, res, next) => {
-    try {
-        const users = await User.find();
-        res.status(200).json(users);
-    } catch (error) {
-        next(error)
-    }
-})
+  try {
+    const users = await User.find();
+    res.status(200).json(users);
+  } catch (error) {
+    next(error);
+  }
+});
+*/
 
 module.exports = router;
