@@ -3,7 +3,7 @@ const { Schema, model } = mongoose;
 
 // Define the Item schema
 const itemSchema = new Schema({
-  product: {
+  productId: {
     type: Schema.Types.ObjectId,
     ref: "Product",
     required: [true, "Product ID is required."],
@@ -24,7 +24,8 @@ const itemSchema = new Schema({
 const orderSchema = new Schema(
   {
     userId: {
-      type: String,
+      type: Schema.Types.ObjectId,
+      ref: "User",
       required: [true, "User ID is required."],
     },
     status: {
@@ -68,10 +69,18 @@ const orderSchema = new Schema(
       trim: true,
       default: null,
     },
+    shippedAt: {
+        type: Date,
+        default: null,
+    },
     cancellationReason: {
       type: String,
       enum: [null, "stock problem", "customer request"],
       default: null,
+    },
+    cancelledAt: {
+        type: Date,
+        default: null,
     },
   },
   {
