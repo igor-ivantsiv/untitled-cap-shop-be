@@ -1,104 +1,128 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 const Order = require("../models/Order.model");
+const Stock = require("../models/Stock.model");
 
 // Create a new order
-router.post('/', async (req, res) => {
+router.post("/", async (req, res, next) => {
+  try {
+    const {
+      userId,
+      firstName,
+      lastName,
+      streetHouseNumber,
+      city,
+      zipCode,
+      items,
+    } = req.body;
+
+    const totalSalesPrice = items.reduce((sum, item) => {
+      return sum + item.salesPrice * item.quantity;
+    }, 0);
+
+    const newOrder = await Order.create({
+      userId,
+      firstName,
+      lastName,
+      streetHouseNumber,
+      city,
+      zipCode,
+      items,
+      totalSalesPrice,
+    });
+    res.status(201).json(newOrder);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.put("/shipment/:orderId", async (req, res, next) => {
+    const { orderId } = req.params;
+    const { trackingId } = req.body;
+   
     try {
-        const { userId, firstName, lastName, streetHouseNumber, city, zipCode, items } = req.body;
+        // Update the order status and tracking ID
+        const existingOrder = await Order.findById(orderId);
+        if (!existingOrder) {
+            return res.status(404).json({ error: "Order not found" });
+        }
 
-        // Calculate the total sales price
-        const totalSalesPrice = items.reduce((sum, item) => {
-            return sum + item.salesPrice * item.quantity;
-        }, 0);
+        if (existingOrder.status === "shipped") {
+            return res.status(400).json({ error: "Order is already shipped" });
+        }
 
-        const order = new Order({
-            userId,
-            firstName,
-            lastName,
-            streetHouseNumber,
-            city,
-            zipCode,
-            items,
-            totalSalesPrice
-        });
+        if (existingOrder.status === "cancelled") {
+            return res.status(400).json({ error: "Order is cancelled" });
+        }
 
-        await order.save();
-        res.status(201).json(order);
+        const shipment = await Order.findOneAndUpdate(
+            { _id: orderId },
+            { $set: { status: "shipped", trackingId: trackingId,  shippedAt: new Date()} },
+            { new: true }
+        );
+
+        // Update the stock by reducing realStock for each product in the order
+        const orderItems = shipment.items;
+        await Promise.all(orderItems.map(async (item) => {
+            await Stock.findOneAndUpdate(
+                { productId: item.productId },
+                { $inc: { realStock: -item.quantity } }
+            );
+        }));
+
+        res.status(200).json(shipment);
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        next(error);
     }
 });
 
-router.put('/shipment/:orderId', async (req, res) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
+router.put("/cancellation/:orderId", async (req, res) => {
+    const { orderId } = req.params;
+    const { cancellationReason } = req.body;
+   
     try {
-        const { orderId } = req.params;
-        const { trackingId } = req.body;
-
-        const order = await Order.findOne({ orderId }).populate('items.product').exec();
-
-        if (!order) {
-            return res.status(404).json({ error: 'Order not found' });
+        // Update the order status and tracking ID
+        const existingOrder = await Order.findById(orderId);
+        if (!existingOrder) {
+            return res.status(404).json({ error: "Order not found" });
         }
 
-        // Update order status to shipped with trackingId
-        order.status = 'shipped';
-        order.trackingId = trackingId;
-        await order.save({ session });
-
-        // Update realStock for each product in the order
-        for (const item of order.items) {
-            await Stock.updateOne({ product: item.product._id }, { $inc: { real_stock: -1 } }, { session });
+        if (existingOrder.status === "shipped") {
+            return res.status(400).json({ error: "Order is shipped" });
         }
 
-        await session.commitTransaction();
-        session.endSession();
+        if (existingOrder.status === "cancelled") {
+            return res.status(400).json({ error: "Order is already cancelled" });
+        }
 
-        res.status(200).json(order);
+        const cancellation = await Order.findOneAndUpdate(
+            { _id: orderId },
+            { $set: { status: "cancelled", cancellationReason: cancellationReason,  cancelledAt: new Date()} },
+            { new: true }
+        );
+
+        // Update the real stock if there is a problem with the item
+        const orderItems = cancellation.items;
+        if (cancellationReason === "stock problem"){
+            await Promise.all(orderItems.map(async (item) => {
+                await Stock.findOneAndUpdate(
+                    { productId: item.productId },
+                    { $inc: { realStock: -item.quantity } }
+                );
+            }));  
+        }
+        // Update the virtual stock if there is NO problem with the item
+        if (cancellationReason === "customer request"){
+            await Promise.all(orderItems.map(async (item) => {
+                await Stock.findOneAndUpdate(
+                    { productId: item.productId },
+                    { $inc: { virtualStock: +item.quantity } }
+                );
+            }));
+        }
+        res.status(200).json(cancellation);
     } catch (error) {
-        await session.abortTransaction();
-        session.endSession();
-
-        res.status(400).json({ error: error.message });
-    }
-});
-
-router.put('/cancellation/:orderId', async (req, res) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
-    try {
-        const { orderId } = req.params;
-        const { cancellationReason } = req.body;
-
-        const order = await Order.findOne({ orderId }).populate('items.product').exec();
-
-        if (!order) {
-            return res.status(404).json({ error: 'Order not found' });
-        }
-
-        // Update order status to cancelled with cancellationReason
-        order.status = 'cancelled';
-        order.cancellationReason = cancellationReason;
-        await order.save({ session });
-
-        // Update virtualStock for each product in the order
-        for (const item of order.items) {
-            await Stock.updateOne({ product: item.product._id }, { $inc: { virtual_stock: 1 } }, { session });
-        }
-
-        await session.commitTransaction();
-        session.endSession();
-
-        res.status(200).json(order);
-    } catch (error) {
-        await session.abortTransaction();
-        session.endSession();
-
-        res.status(400).json({ error: error.message });
+        next(error);
     }
 });
 
