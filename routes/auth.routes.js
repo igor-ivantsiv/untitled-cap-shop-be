@@ -8,12 +8,12 @@ const { isAuthenticated, authorizeRole } = require("../middlewares/route-guard.m
 // register
 router.post("/register", async (req, res, next) => {
   const salt = bcrypt.genSaltSync(13);
-  console.log("REG BODY: ", req.body)
-  const passwordHash = bcrypt.hashSync(req.body.values.password, salt);
+  console.log("REQ BODY: ", req.body)
+  const passwordHash = bcrypt.hashSync(req.body.password, salt);
 
   try {
     const newUser = await User.create({
-      ...req.body.values,
+      ...req.body,
       passwordHash,
     });
 
@@ -25,7 +25,7 @@ router.post("/register", async (req, res, next) => {
 
 // login
 router.post("/login", async (req, res, next) => {
-  const { username, password } = req.body.values;
+  const { username, password } = req.body;
 
   try {
     const user = await User.findOne({ username });
@@ -44,6 +44,7 @@ router.post("/login", async (req, res, next) => {
       res.status(200).json({ token });
     } else {
       res.status(403).json({ message: "incorrect password or username" });
+      // what else should be done here?
     }
   } catch (error) {
     next(error);
@@ -52,8 +53,8 @@ router.post("/login", async (req, res, next) => {
 
 // verify
 router.get("/verify", isAuthenticated, (req, res, next) => {
-  //res.status(200).json(req.tokenPayload);
-  res.status(200).json({message: "token validated"})
+  res.status(200).json(req.tokenPayload);
+  //res.status(200).json({message: "token validated"})
 });
 
 router.get("/verify/admin", isAuthenticated, authorizeRole, (req, res, next) => {
