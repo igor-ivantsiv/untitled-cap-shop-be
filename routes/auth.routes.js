@@ -8,7 +8,7 @@ const { isAuthenticated, authorizeRole } = require("../middlewares/route-guard.m
 // register
 router.post("/register", async (req, res, next) => {
   const salt = bcrypt.genSaltSync(13);
-  console.log("REQ BODY: ", req.body)
+  //console.log("REQ BODY: ", req.body)
   const passwordHash = bcrypt.hashSync(req.body.password, salt);
 
   try {
@@ -71,6 +71,16 @@ router.get("/", async (req, res, next) => {
     next(error);
   }
 });
+
+// (TEST) verify a path that only admin can reach
+router.get("/users", isAuthenticated, authorizeRole, async (req, res, next) => {
+  try {
+    const users = await User.find();
+    res.status(200).json(users);
+  } catch (error) {
+    next(error);
+  }
+})
 
 
 module.exports = router;
