@@ -41,7 +41,6 @@ router.put("/shipment/:orderId", async (req, res, next) => {
     const { trackingId } = req.body;
    
     try {
-        // Update the order status and tracking ID
         const existingOrder = await Order.findById(orderId);
         if (!existingOrder) {
             return res.status(404).json({ error: "Order not found" });
@@ -65,7 +64,7 @@ router.put("/shipment/:orderId", async (req, res, next) => {
         const orderItems = shipment.items;
         await Promise.all(orderItems.map(async (item) => {
             await Stock.findOneAndUpdate(
-                { productId: item.productId },
+                { varientId: item.varientId },
                 { $inc: { realStock: -item.quantity } }
             );
         }));
@@ -106,7 +105,7 @@ router.put("/cancellation/:orderId", async (req, res) => {
         if (cancellationReason === "stock problem"){
             await Promise.all(orderItems.map(async (item) => {
                 await Stock.findOneAndUpdate(
-                    { productId: item.productId },
+                    { varientId: item.varientId },
                     { $inc: { realStock: -item.quantity } }
                 );
             }));  
@@ -115,7 +114,7 @@ router.put("/cancellation/:orderId", async (req, res) => {
         if (cancellationReason === "customer request"){
             await Promise.all(orderItems.map(async (item) => {
                 await Stock.findOneAndUpdate(
-                    { productId: item.productId },
+                    { varientId: item.varientId },
                     { $inc: { virtualStock: +item.quantity } }
                 );
             }));
