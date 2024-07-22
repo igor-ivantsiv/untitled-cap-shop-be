@@ -16,6 +16,24 @@ router.get("/varients", async (req, res, next) => {
   }
 });
 
+// GET ALL VARIANTS PER PRODUCT
+router.get("/:productId", async (req, res, next) => {
+  const {productId} = req.params
+  if (!mongoose.isValidObjectId(productId)) {
+    return next(new Error("invalid ID"))
+  }
+
+  try {
+    const variants = await Varient.find({productId: productId});
+    if (!variants) {
+      return next(new Error("no variants found"));
+    }
+    res.status(200).json(variants)
+  } catch (error) {
+    next(error)
+  }
+})
+
 // GET VARIENT BY ID
 
 router.get("/varients/:varientId", async (req, res) => {
