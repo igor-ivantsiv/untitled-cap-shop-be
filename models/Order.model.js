@@ -3,9 +3,9 @@ const { Schema, model } = mongoose;
 
 // Define the Item schema
 const itemSchema = new Schema({
-  productId: {
+  varientId: {
     type: Schema.Types.ObjectId,
-    ref: "Product",
+    ref: "Varient",
     required: [true, "Product ID is required."],
   },
   quantity: {

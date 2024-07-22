@@ -4,10 +4,10 @@ const Stock = require("../models/Stock.model");
 const router = require("express").Router();
 // All routes starts with /api/stocks
 
-router.put("/update/:productId", async (req, res, next) => {
+router.put("/update/:varientId", async (req, res, next) => {
   try {
     const updatedStock = await Stock.findOneAndUpdate(
-      { productId: req.params.productId },
+      { varientId: req.params.varientId },
       {
         $set: {
           virtualStock: req.body.virtualStock,
@@ -25,10 +25,10 @@ router.put("/update/:productId", async (req, res, next) => {
   }
 });
 
-router.put("/reservation/:productId", async (req, res, next) => {
+router.put("/reservation/:varientId", async (req, res, next) => {
   try {
     const updatedStock = await Stock.findOneAndUpdate(
-      { productId: req.params.productId },
+      { varientId: req.params.varientId },
       { $inc: { virtualStock: -1 } },
       { new: true }
     );
@@ -41,10 +41,10 @@ router.put("/reservation/:productId", async (req, res, next) => {
   }
 });
 
-router.put("/dereservation/:productId", async (req, res, next) => {
+router.put("/dereservation/:varientId", async (req, res, next) => {
   try {
     const updatedStock = await Stock.findOneAndUpdate(
-      { productId: req.params.productId },
+      { varientId: req.params.varientId },
       { $inc: { virtualStock: 1 } },
       { new: true }
     );
