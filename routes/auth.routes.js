@@ -60,7 +60,11 @@ router.post("/login", async (req, res, next) => {
 
 // verify
 router.get("/verify", isAuthenticated, (req, res, next) => {
-  res.status(200).json(req.tokenPayload);
+  // changed to only send required data back 
+  res.status(200).json({
+    userId: req.tokenPayload.userId,
+    role: req.tokenPayload.role,
+  });
   //res.status(200).json({message: "token validated"})
 });
 
