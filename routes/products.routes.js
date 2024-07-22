@@ -1,16 +1,16 @@
 const { default: mongoose } = require("mongoose");
 const Product = require("../models/Product.model");
 const Stock = require("../models/Stock.model");
-const Varient = require("../models/Varient.model");
+const Variant = require("../models/Variant.model");
 
 const router = require("express").Router();
 
 // GET ALL VARIENTS
 
-router.get("/varients", async (req, res, next) => {
+router.get("/variants", async (req, res, next) => {
   try {
-    const varientsData = await Varient.find().populate("productId");
-    res.json(varientsData);
+    const variantsData = await Variant.find().populate("productId");
+    res.json(variantsData);
   } catch (error) {
     next(error);
   }
@@ -18,15 +18,15 @@ router.get("/varients", async (req, res, next) => {
 
 // GET VARIENT BY ID
 
-router.get("/varients/:varientId", async (req, res) => {
+router.get("/variants/:variantId", async (req, res) => {
   try {
-    if (!mongoose.isValidObjectId(req.params.varientId)) {
+    if (!mongoose.isValidObjectId(req.params.variantId)) {
       res.status(500).json("Invalid Id");
     } else {
-      const varientData = await Varient.findById(req.params.varientId).populate(
+      const variantData = await Variant.findById(req.params.variantId).populate(
         "productId"
       );
-      res.json(varientData);
+      res.json(variantData);
     }
   } catch (error) {
     next(error);
@@ -60,7 +60,7 @@ router.post("/", async (req, res) => {
       if (!newProduct) {
         throw new Error("Failed to create product");
       }
-      const newVarient = await Varient.create({
+      const newVariant = await Variant.create({
         productId: newProduct._id,
         category: category,
         price: price,
@@ -68,20 +68,20 @@ router.post("/", async (req, res) => {
         size: size,
         imageUrl: imageUrl,
       });
-      if (!newVarient) {
-        throw new Error("Failed to create varient");
+      if (!newVariant) {
+        throw new Error("Failed to create variant");
       }
       const newStock = await Stock.create({
-        varientId: newVarient._id,
+        variantId: newVariant._id,
       });
       if (!newStock) {
         throw new Error("Failed to create stock");
       }
       res
         .status(201)
-        .json({ product: newProduct, varient: newVarient, stock: newStock });
+        .json({ product: newProduct, variant: newVariant, stock: newStock });
     } else {
-      const newVarient = await Varient.create({
+      const newVariant = await Variant.create({
         productId: existingProduct._id,
         category: category,
         price: price,
@@ -89,18 +89,18 @@ router.post("/", async (req, res) => {
         size: size,
         imageUrl: imageUrl,
       });
-      if (!newVarient) {
-        throw new Error("Failed to create varient");
+      if (!newVariant) {
+        throw new Error("Failed to create variant");
       }
       const newStock = await Stock.create({
-        varientId: newVarient._id,
+        variantId: newVariant._id,
       });
       if (!newStock) {
         throw new Error("Failed to create stock");
       }
       res.status(201).json({
         product: existingProduct,
-        varient: newVarient,
+        variant: newVariant,
         stock: newStock,
       });
     }
@@ -135,9 +135,9 @@ router.put("/:productId", async (req, res, next) => {
 
 // UPDATE VARIENT
 
-router.put("/varients/:varientId", async (req, res, next) => {
+router.put("/variants/:variantId", async (req, res, next) => {
   try {
-    if (!mongoose.isValidObjectId(req.params.varientId)) {
+    if (!mongoose.isValidObjectId(req.params.variantId)) {
       res.status(500).json("Invalid Id");
     } else {
       const existingProduct = await Product.findById(req.body.productId);
@@ -145,15 +145,15 @@ router.put("/varients/:varientId", async (req, res, next) => {
         return res.status(404).json({ error: "Product not found" });
       }
 
-      const updatedVarient = await Varient.findByIdAndUpdate(
-        req.params.varientId,
+      const updatedVariant = await Variant.findByIdAndUpdate(
+        req.params.variantId,
         req.body,
         {
           new: true,
           runValidators: true,
         }
       );
-      res.status(200).json(updatedVarient);
+      res.status(200).json(updatedVariant);
     }
   } catch (error) {
     next(error);
@@ -162,21 +162,21 @@ router.put("/varients/:varientId", async (req, res, next) => {
 
 // ACTIVATE/DIACTIVATE A VARIENT
 
-router.put("/varients/activate/:varientId", async (req, res, next) => {
+router.put("/variants/activate/:variantId", async (req, res, next) => {
   const { active } = req.body;
   try {
-    if (!mongoose.isValidObjectId(req.params.varientId)) {
+    if (!mongoose.isValidObjectId(req.params.variantId)) {
       res.status(500).json("Invalid Id");
     } else {
-      const updatedVarient = await Varient.findByIdAndUpdate(
-        req.params.varientId,
+      const updatedVariant = await Variant.findByIdAndUpdate(
+        req.params.variantId,
         { $set: { active: active } },
         {
           new: true,
           runValidators: true,
         }
       );
-      res.status(200).json(updatedVarient);
+      res.status(200).json(updatedVariant);
     }
   } catch (error) {
     next(error);
@@ -185,25 +185,25 @@ router.put("/varients/activate/:varientId", async (req, res, next) => {
 
 // DELETE A VARIENT
 
-router.delete("/varients/:varientId", async (req, res, next) => {
-  const { varientId } = req.params;
+router.delete("/variants/:variantId", async (req, res, next) => {
+  const { variantId } = req.params;
   try {
-    if (!mongoose.isValidObjectId(varientId)) {
+    if (!mongoose.isValidObjectId(variantId)) {
       res.status(500).json("Invalid Id");
     } else {
-      const deleteVarient = await Varient.findByIdAndDelete(
-        varientId
+      const deleteVariant = await Variant.findByIdAndDelete(
+        variantId
       );
-      if (!deleteVarient) {
-        throw new Error("Failed to delete varient");
+      if (!deleteVariant) {
+        throw new Error("Failed to delete variant");
       }
       const deleteStock = await Stock.findOneAndDelete({
-        varientId: varientId,
+        variantId: variantId,
       });
       if (!deleteStock) {
         throw new Error("Failed to delete stock");
       }
-      res.status(200).json("Varient and stock deleted");
+      res.status(200).json("Variant and stock deleted");
     }
   } catch (error) {
     next(error);
