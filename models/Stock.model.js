@@ -3,9 +3,9 @@ const mongoose = require("mongoose")
 
 const stockSchema = new Schema(
   {
-    varientId: {
+    variantId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Varient",
+      ref: "Variant",
     },
     virtualStock: {
       type: Number,
