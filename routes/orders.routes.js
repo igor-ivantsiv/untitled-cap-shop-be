@@ -104,7 +104,7 @@ router.put("/shipment/:orderId", async (req, res, next) => {
   }
 });
 
-router.put("/cancellation/:orderId", async (req, res) => {
+router.put("/cancellation/:orderId", async (req, res, next) => {
   const { orderId } = req.params;
   const { cancellationReason } = req.body;
 
