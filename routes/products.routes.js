@@ -24,7 +24,7 @@ router.get("/:productId", async (req, res, next) => {
   }
 
   try {
-    const variants = await Varient.find({productId: productId});
+    const variants = await Variant.find({productId: productId});
     if (!variants) {
       return next(new Error("no variants found"));
     }
