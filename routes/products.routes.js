@@ -164,6 +164,7 @@ router.put("/variants/:variantId", async (req, res, next) => {
 
 router.put("/variants/activate/:variantId", async (req, res, next) => {
   const { active } = req.body;
+  console.log(req.body)
   try {
     if (!mongoose.isValidObjectId(req.params.variantId)) {
       res.status(500).json("Invalid Id");

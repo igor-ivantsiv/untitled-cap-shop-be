@@ -4,6 +4,21 @@ const Stock = require("../models/Stock.model");
 const router = require("express").Router();
 // All routes starts with /api/stocks
 
+router.get("/:variantId", async (req, res, next) => {
+  try {
+    const variantId = req.params.variantId;
+    if (!mongoose.isValidObjectId(req.params.variantId)) {
+      res.status(500).json("Invalid Id");
+    } else {
+      const stockData = await Stock.findOne({ variantId: variantId });
+      res.json(stockData);
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
+
 router.put("/update/:variantId", async (req, res, next) => {
   try {
     const updatedStock = await Stock.findOneAndUpdate(
