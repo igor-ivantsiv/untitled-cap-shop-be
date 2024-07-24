@@ -40,7 +40,7 @@ router.put("/update/:variantId", async (req, res, next) => {
   }
 });
 
-router.put("/reservation/:variantId", async (req, res, next) => {
+router.get("/reservation/:variantId", async (req, res, next) => {
   try {
     const updatedStock = await Stock.findOneAndUpdate(
       { variantId: req.params.variantId },
@@ -58,9 +58,11 @@ router.put("/reservation/:variantId", async (req, res, next) => {
 
 router.put("/dereservation/:variantId", async (req, res, next) => {
   try {
+    const increasedStock = parseInt(req.body.quantity)
+    console.log("INCREASED STOCK: ", increasedStock)
     const updatedStock = await Stock.findOneAndUpdate(
       { variantId: req.params.variantId },
-      { $inc: { virtualStock: 1 } },
+      { $inc: { virtualStock: increasedStock } },
       { new: true }
     );
     if (!updatedStock) {
