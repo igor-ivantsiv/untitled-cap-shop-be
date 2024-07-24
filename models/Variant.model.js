@@ -7,11 +7,6 @@ const variantSchema = new Schema(
         type: mongoose.Schema.Types.ObjectId,
         ref: "Product",
     },
-    category: {
-      type: String,
-      required: [true, "category is required."],
-      trim: true,
-    },
     price: {
       type: Number,
       required: [true, "Price is required."],
