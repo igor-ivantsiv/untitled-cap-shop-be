@@ -48,62 +48,83 @@ router.post("/", async (req, res) => {
     imageUrl,
   } = req.body;
 
+  // Initialize values if they are empty strings or null
+  const validProductId = productId && productId.trim() !== "" ? productId : null;
+  const validName = name && name.trim() !== "" ? name : "Unnamed Product";
+  const validDescription = description && description.trim() !== "" ? description : "No description provided";
+  const validCategory = category && category.trim() !== "" ? category : "No category provided";
+  const validMaterial = material && material.trim() !== "" ? material : "Material not specified";
+
   try {
-    const existingProduct = await Product.findById(productId);
+    let existingProduct = null;
+    
+    if (validProductId) {
+      existingProduct = await Product.findById(validProductId);
+    }
+
     if (!existingProduct) {
+      // Creating a new product if it doesn't exist
       const newProduct = await Product.create({
-        name,
-        category,
-        description,
-        material,
+        name: validName,
+        category: validCategory,
+        description: validDescription,
+        material: validMaterial,
       });
+      
       if (!newProduct) {
         throw new Error("Failed to create product");
       }
+
       const newVariant = await Variant.create({
         productId: newProduct._id,
-        category: category,
         price: price,
         color: color,
         size: size,
         imageUrl: imageUrl,
       });
+
       if (!newVariant) {
         throw new Error("Failed to create variant");
       }
+
       const newStock = await Stock.create({
         variantId: newVariant._id,
       });
+
       if (!newStock) {
         throw new Error("Failed to create stock");
       }
-      res
-        .status(201)
-        .json({ product: newProduct, variant: newVariant, stock: newStock });
+
+      res.status(201).json({ product: newProduct, variant: newVariant, stock: newStock });
     } else {
+      // Add new variant for existing product
       const newVariant = await Variant.create({
         productId: existingProduct._id,
-        category: category,
         price: price,
         color: color,
         size: size,
         imageUrl: imageUrl,
       });
+
       if (!newVariant) {
         throw new Error("Failed to create variant");
       }
+
       const newStock = await Stock.create({
         variantId: newVariant._id,
       });
+
       if (!newStock) {
         throw new Error("Failed to create stock");
       }
+
       res.status(201).json({
         product: existingProduct,
         variant: newVariant,
         stock: newStock,
       });
     }
+
     // All operations completed successfully
   } catch (error) {
     console.error(error);
