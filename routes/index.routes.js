@@ -13,4 +13,7 @@ router.use("/stocks", stocksRoutes);
 const ordersRoutes = require("./orders.routes");
 router.use("/orders", ordersRoutes);
 
+const paymentRoutes = require("./payment.routes");
+router.use("/payments", paymentRoutes);
+
 module.exports = router
