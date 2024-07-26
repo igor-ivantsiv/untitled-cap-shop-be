@@ -35,8 +35,8 @@ const orderSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ["received", "shipped", "cancelled"],
-      default: "received",
+      enum: ["pending", "received", "shipped", "cancelled", "payment error"],
+      default: "pending",
     },
     firstName: {
       type: String,
@@ -86,6 +86,11 @@ const orderSchema = new Schema(
     cancelledAt: {
         type: Date,
         default: null,
+    },
+    paymentIntent: {
+      type: String,
+      required: [true, "Payment intent is required."],
+      trim: true,
     },
   },
   {

@@ -35,6 +35,7 @@ router.post("/", async (req, res, next) => {
       city,
       zipCode,
       items,
+      paymentIntent,
     } = req.body;
 
     const totalSalesPrice = items.reduce((sum, item) => {
@@ -50,6 +51,7 @@ router.post("/", async (req, res, next) => {
       zipCode,
       items,
       totalSalesPrice,
+      paymentIntent,
     });
     res.status(201).json(newOrder);
   } catch (error) {
