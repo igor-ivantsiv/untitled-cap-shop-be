@@ -1,5 +1,5 @@
 const expressWs = require("express-ws");
-const updateStockAndClearCart = require("./dbOperations")
+const { updateStockAndClearCart } = require("./dbOperations")
 
 const connectWs = (app) => {
   expressWs(app);
