@@ -2,6 +2,8 @@
 // https://www.npmjs.com/package/dotenv
 require('dotenv').config()
 
+
+
 // Handles http requests (express is node js framework)
 // https://www.npmjs.com/package/express
 const express = require('express')
@@ -15,6 +17,10 @@ app.use("/api/payments", paymentRoutes);
 // ℹ️ This function is getting exported from the config folder. It runs most pieces of middleware
  // To have access to `body` property in the request
 app.use(express.json())
+
+
+require("./ws/wsConnection")(app)
+
 // 👇 Start handling routes here
 const indexRoutes = require('./routes/index.routes')
 app.use('/api', indexRoutes)
