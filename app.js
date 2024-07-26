@@ -7,10 +7,14 @@ require('dotenv').config()
 const express = require('express')
 
 const app = express()
+  require('./config')(app)
+
+const paymentRoutes = require("./routes/payment.routes");
+app.use("/api/payments", paymentRoutes);
 
 // ℹ️ This function is getting exported from the config folder. It runs most pieces of middleware
-require('./config')(app)
-
+ // To have access to `body` property in the request
+app.use(express.json())
 // 👇 Start handling routes here
 const indexRoutes = require('./routes/index.routes')
 app.use('/api', indexRoutes)
