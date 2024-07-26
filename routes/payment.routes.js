@@ -12,7 +12,7 @@ const stripe = require("stripe")(process.env.STRIPE_KEY);
 router.post("/create-payment-intent", express.json({ type: 'application/json' }), async (req, res, next) => {
   const { items } = req.body;
   let totalSalesPrice = items.reduce((acc, item) => {
-    return acc + item.salesPrice;
+    return acc + item.salesPrice * item.quantity;
   }, 0);
   try {
     const paymentIntent = await stripe.paymentIntents.create({
@@ -31,6 +31,19 @@ router.post("/create-payment-intent", express.json({ type: 'application/json' })
     next(error);
   }
 });
+
+router.post('/cancel-payment-intent', express.json({ type: 'application/json' }), async (req, res) => {
+    const { paymentIntentId } = req.body;
+  
+    try {
+      const canceledPaymentIntent = await stripe.paymentIntents.cancel(paymentIntentId);
+      res.status(200).send(canceledPaymentIntent);
+    } catch (error) {
+      console.error('Error canceling PaymentIntent:', error);
+      res.status(500).send({ error: error.message });
+    }
+  });
+
 
 const endpointSecret =
   "whsec_8ff19f14d537ffbb6179b6ce60f6871881cbc0afe8411d041aa6a1bb82064367";
