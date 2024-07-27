@@ -5,6 +5,7 @@ const Cart = require("../models/Cart.model");
 const mongoose = require("mongoose");
 
 const { isAuthenticated } = require("../middlewares/route-guard.middleware");
+const User = require("../models/User.model");
 
 // GET USER'S CART
 router.get("/:userId", isAuthenticated, async (req, res, next) => {
@@ -27,7 +28,7 @@ router.get("/:userId", isAuthenticated, async (req, res, next) => {
       .populate("content.variantId");
     if (!userCart) {
       res.status(404).json({ message: "User cart not found" });
-      return next(new Error("User cart found"));
+      return next(new Error("User cart not found"));
     }
     res.status(200).json(userCart);
   } catch (error) {
@@ -36,7 +37,7 @@ router.get("/:userId", isAuthenticated, async (req, res, next) => {
 });
 
 // CREATE NEW CART
-router.post("/:userId", isAuthenticated, async (req, res, next) => {
+router.post("/:userId", async (req, res, next) => {
   const { userId } = req.params;
 
   // validate user id
@@ -45,6 +46,12 @@ router.post("/:userId", isAuthenticated, async (req, res, next) => {
   }
 
   try {
+    // find existing user
+    const existingUser = await User.findById(userId);
+    if (!existingUser) {
+      return next(new Error("Existing user not found"));
+    }
+
     // create new cart with empty content
     const newCart = await Cart.create({
       userId,
@@ -52,10 +59,15 @@ router.post("/:userId", isAuthenticated, async (req, res, next) => {
     });
 
     if (!newCart) {
-      return next(new Error("Failed to create cart"));
+      throw new Error("Failed to create cart");
     }
     res.status(201).json(newCart);
   } catch (error) {
+
+    // if user already has a cart, respond to client
+    if (error.code === 11000) {
+      res.status(409).json({ message: "Cart already created for this user" });
+    }
     next(error);
   }
 });
@@ -76,7 +88,7 @@ router.put("/:userId/add-item", isAuthenticated, async (req, res, next) => {
   }
 
   if (!mongoose.isValidObjectId(variantId)) {
-    return next(new Error("invalid variant ID"))
+    return next(new Error("invalid variant ID"));
   }
 
   try {
@@ -93,9 +105,10 @@ router.put("/:userId/add-item", isAuthenticated, async (req, res, next) => {
       { new: true }
     );
     if (!updatedStock) {
-      return res.status(404).json({ error: "Product or stock not found" });
+      return next(new Error("Product or stock not found"))
     }
 
+    console.log("STOCK UPDATED /add-item")
     // find existing item by id
     const itemIndex = userCart.content.findIndex(
       (item) => item.variantId.toString() === variantId.toString()
@@ -320,6 +333,9 @@ router.put(
 router.put("/:userId/set", isAuthenticated, async (req, res, next) => {
   const { userId } = req.params;
   const { cartContent } = req.body;
+
+  console.log("CART CONTENT: ", cartContent)
+  console.log("REQ BODY: ", req.body)
 
   if (!cartContent || cartContent.length < 1) {
     return next(new Error("no cart provided"));

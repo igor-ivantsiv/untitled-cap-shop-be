@@ -2,7 +2,7 @@ const expressWs = require("express-ws");
 const { clearCartAndUpdateStock } = require("./dbOperations");
 
 const logWsError = (err, context) => {
-  console.error("ERROR IN WS: ", context.err.stack || err);
+  console.error("ERROR IN WS: ", context, err);
 };
 
 const connectWs = (app) => {
