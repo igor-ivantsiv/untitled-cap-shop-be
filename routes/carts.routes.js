@@ -75,6 +75,10 @@ router.put("/:userId/add-item", isAuthenticated, async (req, res, next) => {
     return next(new Error("User not authorized"));
   }
 
+  if (!mongoose.isValidObjectId(variantId)) {
+    return next(new Error("invalid variant ID"))
+  }
+
   try {
     // find user cart
     const userCart = await Cart.findOne({ userId });
@@ -228,7 +232,7 @@ router.put("/:userId/remove-item", isAuthenticated, async (req, res, next) => {
   }
 });
 
-// EMPTY CART
+// EMPTY CART (restock items)
 router.put("/:userId/empty-cart", isAuthenticated, async (req, res, next) => {
   const { userId } = req.params;
 
@@ -257,12 +261,12 @@ router.put("/:userId/empty-cart", isAuthenticated, async (req, res, next) => {
       },
     }));
 
-    // perform bult operation to increase stock for each item that was in cart
+    // perform bulk operation to increase stock for each item that was in cart
     const bulkOpResult = await Stock.bulkWrite(bulkOperations, {
       ordered: false,
     });
     if (bulkOpResult) {
-      console.log("BULK OP SUCCESS: ", bulkOpResult);
+      console.log("BULK OP SUCCESS: /empty-cart", bulkOpResult);
     }
 
     // set cart content to empty array
@@ -275,7 +279,97 @@ router.put("/:userId/empty-cart", isAuthenticated, async (req, res, next) => {
   }
 });
 
+// EMPTY CART AFTER SALE (don't restock items)
+router.put(
+  "/:userId/empty-cart/sale",
+  isAuthenticated,
+  async (req, res, next) => {
+    const { userId } = req.params;
 
-// SET CART (on reload, session end)
+    // verify user with token
+    if (!mongoose.isValidObjectId(userId)) {
+      return next(new Error("invalid ID"));
+    }
+
+    if (userId !== req.tokenPayload.userId) {
+      res.status(403).json({ message: "Forbidden" });
+      return next(new Error("User not authorized"));
+    }
+
+    try {
+      // find user cart
+      const userCart = await Cart.findOne({ userId });
+      if (!userCart) {
+        return next(new Error("User cart not found"));
+      }
+
+      // set cart content to empty array
+      userCart.content = [];
+      await userCart.save();
+
+      console.log("CART EMPTIED /empty-cart/sale");
+
+      res.status(200).json(userCart);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// SET CART (on reload, same session)
+router.put("/:userId/set", isAuthenticated, async (req, res, next) => {
+  const { userId } = req.params;
+  const { cartContent } = req.body;
+
+  if (!cartContent || cartContent.length < 1) {
+    return next(new Error("no cart provided"));
+  }
+
+  // verify user with token
+  if (!mongoose.isValidObjectId(userId)) {
+    return next(new Error("invalid ID"));
+  }
+
+  if (userId !== req.tokenPayload.userId) {
+    res.status(403).json({ message: "Forbidden" });
+    return next(new Error("User not authorized"));
+  }
+
+  try {
+    // find user cart
+    const userCart = await Cart.findOne({ userId });
+    if (!userCart) {
+      return next(new Error("User cart not found"));
+    }
+
+    // create array of operations
+    const bulkOperations = cartContent.map((item) => ({
+      updateOne: {
+        filter: { variantId: item.variantId },
+        update: { $inc: { virtualStock: -item.quantity } },
+      },
+    }));
+
+    // perform bulk operation to decrease stock for each item that was in cart
+    const bulkOpResult = await Stock.bulkWrite(bulkOperations, {
+      ordered: false,
+    });
+
+    // check if any operation failed
+    if (bulkOpResult.hasWriteErrors()) {
+      console.log("BULK OP FAILURE: ", bulkOpResult);
+    } else {
+      console.log("BULK OP SUCCESS: /set", bulkOpResult);
+    }
+
+    // set cart content to back to what was received in req.body
+    userCart.content = cartContent;
+    await userCart.save();
+
+    res.status(200).json(userCart);
+  } catch (error) {
+    next(error);
+  }
+});
 
 module.exports = router;
