@@ -22,6 +22,7 @@ const handleMessage = async (senderId, message, connectedUsers, username) => {
   const { recipientId, content } = message;
 
   try {
+    // create message in db to be retrieved when user logs on
     const newMessage = await Message.create({
       senderId: senderId,
       recipientId: recipientId,
@@ -32,6 +33,7 @@ const handleMessage = async (senderId, message, connectedUsers, username) => {
       logWsError(error, "WebSocket error -creating message in db");
     }
 
+    // attempt to send the message
     const recipientWs = connectedUsers.get(recipientId);
     console.log("WS RECIPIENT: ", recipientId);
     if (recipientWs) {
@@ -90,12 +92,14 @@ const connectWs = (app) => {
       logWsError(error, "WebSocket error -unread messages");
     }
 
+    // parse and handle message
     ws.on("message", (message) => {
       console.log("WS MESSAGE: ", message);
       const parsedMessage = JSON.parse(message);
       handleMessage(userId, parsedMessage, connectedUsers, username);
     });
 
+    // remove from connected users and clear cart on disconnect
     ws.on("close", async () => {
       console.log("WS USER DISCONNECTED: ", userId);
       connectedUsers.delete(userId);
