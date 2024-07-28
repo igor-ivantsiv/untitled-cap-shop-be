@@ -36,7 +36,7 @@ router.get("/:userId", isAuthenticated, async (req, res, next) => {
   }
 });
 
-// CREATE NEW CART
+// CREATE NEW CART (on register)
 router.post("/:userId", async (req, res, next) => {
   const { userId } = req.params;
 
