@@ -11,7 +11,7 @@ const findUsername = async (id) => {
   let username = "Not-found";
   try {
     const foundUsername = await User.findById(id).select("username");
-    username = foundUsername.username
+    username = foundUsername.username;
   } catch (error) {
     logWsError("error finding username");
   }
@@ -22,23 +22,23 @@ const handleMessage = async (senderId, message, connectedUsers, username) => {
   const { recipientId, content } = message;
 
   try {
-    // create message in db to be retrieved when user logs on
-    const newMessage = await Message.create({
-      senderId: senderId,
-      recipientId: recipientId,
-      content,
-    });
-
-    if (!newMessage) {
-      logWsError(error, "WebSocket error -creating message in db");
-    }
-
     // attempt to send the message
     const recipientWs = connectedUsers.get(recipientId);
     console.log("WS RECIPIENT: ", recipientId);
     if (recipientWs) {
       console.log("WS MESSAGE SENT");
       recipientWs.send(JSON.stringify({ senderId, username, content }));
+    } else {
+      // create message in db to be retrieved when user logs on
+      const newMessage = await Message.create({
+        senderId: senderId,
+        recipientId: recipientId,
+        content,
+      });
+
+      if (!newMessage) {
+        logWsError(error, "WebSocket error -creating message in db");
+      }
     }
   } catch (error) {
     logWsError(error, "WebSocket error -handle message");
