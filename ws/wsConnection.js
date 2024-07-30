@@ -1,7 +1,10 @@
 const expressWs = require("express-ws");
+const jwt = require("jsonwebtoken");
+
 const { clearCartAndUpdateStock } = require("./dbOperations");
 const Message = require("../models/Message.model");
 const User = require("../models/User.model");
+const { isAuthenticated } = require("../middlewares/route-guard.middleware");
 
 const logWsError = (err, context) => {
   console.error("ERROR IN WS: ", context, err);
@@ -45,6 +48,21 @@ const handleMessage = async (senderId, message, connectedUsers, username) => {
   }
 };
 
+// verify token to ensure 
+const verifyTokenWS = (token, id) => {
+  if (!token) {
+    console.log("WS NO TOKEN FOUND")
+    return false;
+  }
+  const payload = jwt.verify(token, process.env.TOKEN_SECRET);
+  if (payload.userId !== id) {
+    console.log("WS TOKEN NOT VERIFIED")
+    return false
+  }
+
+  return true;
+}
+
 const connectWs = (app) => {
   expressWs(app);
 
@@ -52,11 +70,25 @@ const connectWs = (app) => {
 
   app.ws("/ws", async (ws, req) => {
     const userId = req.query.userId;
+    const token = req.query.token;
+    console.log("WS TOKEN: ", token)
 
     if (!userId) {
       ws.close();
       return;
     }
+
+    if (!verifyTokenWS(token, userId)) {
+      ws.close();
+      return;
+    }
+
+    /*
+    if (userId !== req.tokenPayload.userId) {
+      ws.close();
+      console.log("WS TOKEN NOT MATCHING");
+      return;
+    }*/
 
     const username = await findUsername(userId);
 
