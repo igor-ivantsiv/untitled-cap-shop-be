@@ -288,7 +288,7 @@ router.put("/:userId/empty-cart", isAuthenticated, async (req, res, next) => {
 });
 
 // EMPTY CART AFTER SALE (don't restock items)
-router.put(
+router.get(
   "/:userId/empty-cart/sale",
   isAuthenticated,
   async (req, res, next) => {
