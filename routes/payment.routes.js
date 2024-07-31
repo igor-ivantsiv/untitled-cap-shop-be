@@ -10,12 +10,8 @@ const bodyParser = require('body-parser');
 const stripe = require("stripe")(process.env.STRIPE_KEY);
 
 router.post("/create-payment-intent", express.json({ type: 'application/json' }), async (req, res, next) => {
-  const { content } = req.body.cartPayload;
-console.log(content)
-  if (!content) {
-    return next(new Error('no content'))
-  } 
-  let totalSalesPrice = content.reduce((acc, item) => {
+  const { cartPayload } = req.body;
+  let totalSalesPrice = cartPayload.content.reduce((acc, item) => {
     return acc + item.variantId.price * item.quantity;
   }, 0);
   console.log(totalSalesPrice)
