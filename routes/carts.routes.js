@@ -8,17 +8,12 @@ const { isAuthenticated } = require("../middlewares/route-guard.middleware");
 const User = require("../models/User.model");
 
 // GET USER'S CART
-router.get("/:userId", isAuthenticated, async (req, res, next) => {
+router.get("/:userId", async (req, res, next) => {
   const { userId } = req.params;
 
   // verify user with token
   if (!mongoose.isValidObjectId(userId)) {
     return next(new Error("invalid ID"));
-  }
-
-  if (userId !== req.tokenPayload.userId) {
-    res.status(403).json({ message: "Forbidden" });
-    return next(new Error("User not authorized"));
   }
 
   try {
