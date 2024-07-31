@@ -14,6 +14,7 @@ router.post("/create-payment-intent", express.json({ type: 'application/json' })
   let totalSalesPrice = cartPayload.content.reduce((acc, item) => {
     return acc + item.variantId.price * item.quantity;
   }, 0);
+  console.log(totalSalesPrice)
   try {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: totalSalesPrice,
@@ -34,6 +35,7 @@ router.post("/create-payment-intent", express.json({ type: 'application/json' })
 
 router.post('/cancel-payment-intent', express.json({ type: 'application/json' }), async (req, res) => {
     const { paymentIntentId } = req.body;
+    console.log(paymentIntentId)
   
     try {
       const canceledPaymentIntent = await stripe.paymentIntents.cancel(paymentIntentId);
@@ -52,7 +54,6 @@ const endpointSecret =
     const sig = req.headers['stripe-signature'];
     
     let event;
-  
     try {
       event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
     } catch (err) {
