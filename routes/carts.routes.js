@@ -20,7 +20,13 @@ router.get("/:userId", async (req, res, next) => {
     // find user cart, populate content (variants)
     const userCart = await Cart.findOne({ userId })
       .select("content")
-      .populate("content.variantId");
+      .populate({
+        path: "content.variantId",
+        populate: {
+          path: "productId",
+          model: "Product",
+        },
+      });
     if (!userCart) {
       res.status(404).json({ message: "User cart not found" });
       return next(new Error("User cart not found"));
