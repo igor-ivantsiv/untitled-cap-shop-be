@@ -7,9 +7,20 @@ const router = require("express").Router();
 
 // GET ALL VARIENTS
 
-router.get("/variants", async (req, res, next) => {
+router.get("/all-variants", async (req, res, next) => {
   try {
     const variantsData = await Variant.find().populate("productId");
+    res.json(variantsData);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET ALL VARIENTS
+
+router.get("/variants", async (req, res, next) => {
+  try {
+    const variantsData = await Variant.find({active: true}).populate("productId");
     res.json(variantsData);
   } catch (error) {
     next(error);
