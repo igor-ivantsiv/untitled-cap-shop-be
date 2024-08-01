@@ -2,8 +2,12 @@ const express = require("express");
 const router = express.Router();
 const Order = require("../models/Order.model");
 const Stock = require("../models/Stock.model");
+const {
+  isAuthenticated,
+  authorizeRole,
+} = require("../middlewares/route-guard.middleware");
 
-router.get("/", async (req, res, next) => {
+router.get("/", isAuthenticated, authorizeRole, async (req, res, next) => {
     try {
         const ordersData = await Order.find()
         .sort({createdAt: -1}
@@ -25,7 +29,7 @@ router.get("/", async (req, res, next) => {
 });
 
 // Create a new order
-router.post("/", async (req, res, next) => {
+router.post("/", isAuthenticated, async (req, res, next) => {
   try {
     const {
       userId,
@@ -59,7 +63,7 @@ router.post("/", async (req, res, next) => {
   }
 });
 
-router.put("/shipment/:orderId", async (req, res, next) => {
+router.put("/shipment/:orderId", isAuthenticated, authorizeRole,  async (req, res, next) => {
   const { orderId } = req.params;
   const { trackingId } = req.body;
 
@@ -106,7 +110,7 @@ router.put("/shipment/:orderId", async (req, res, next) => {
   }
 });
 
-router.put("/cancellation/:orderId", async (req, res, next) => {
+router.put("/cancellation/:orderId", isAuthenticated, authorizeRole, async (req, res, next) => {
   const { orderId } = req.params;
   const { cancellationReason } = req.body;
 

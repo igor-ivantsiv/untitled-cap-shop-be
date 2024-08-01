@@ -5,11 +5,15 @@ const Order = require("../models/Order.model");
 const router = express.Router();
 const bodyParser = require('body-parser');
 
+const {
+  isAuthenticated
+} = require("../middlewares/route-guard.middleware");
+
 // Stripe
 
 const stripe = require("stripe")(process.env.STRIPE_KEY);
 
-router.post("/create-payment-intent", express.json({ type: 'application/json' }), async (req, res, next) => {
+router.post("/create-payment-intent", isAuthenticated, express.json({ type: 'application/json' }), async (req, res, next) => {
   const { cartPayload } = req.body;
   let totalSalesPrice = cartPayload.content.reduce((acc, item) => {
     return acc + item.variantId.price * item.quantity;
@@ -33,7 +37,7 @@ router.post("/create-payment-intent", express.json({ type: 'application/json' })
   }
 });
 
-router.post('/cancel-payment-intent', express.json({ type: 'application/json' }), async (req, res) => {
+router.post('/cancel-payment-intent',isAuthenticated, express.json({ type: 'application/json' }),  async (req, res) => {
     const { paymentIntentId } = req.body;
     console.log(paymentIntentId)
   

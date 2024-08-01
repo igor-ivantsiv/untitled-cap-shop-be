@@ -4,10 +4,15 @@ const Stock = require("../models/Stock.model");
 const Variant = require("../models/Variant.model");
 
 const router = require("express").Router();
+const {
+  isAuthenticated,
+  authorizeRole,
+} = require("../middlewares/route-guard.middleware");
 
 // GET ALL VARIENTS
 
-router.get("/all-variants", async (req, res, next) => {
+router.get("/all-variants", isAuthenticated,
+  authorizeRole, async (req, res, next) => {
   try {
     const variantsData = await Variant.find().populate("productId");
     res.json(variantsData);
@@ -64,7 +69,8 @@ router.get("/variants/:variantId", async (req, res) => {
 
 // CREATE VARIENT AND/OR PRODUCT
 
-router.post("/", async (req, res) => {
+router.post("/", isAuthenticated,
+  authorizeRole, async (req, res) => {
   const {
     productId,
     name,
@@ -163,7 +169,8 @@ router.post("/", async (req, res) => {
 
 // UPDATE PRODUCT
 
-router.put("/:productId", async (req, res, next) => {
+router.put("/:productId", isAuthenticated,
+  authorizeRole, async (req, res, next) => {
   try {
     if (!mongoose.isValidObjectId(req.params.productId)) {
       res.status(500).json("Invalid Id");
@@ -185,7 +192,8 @@ router.put("/:productId", async (req, res, next) => {
 
 // UPDATE VARIENT
 
-router.put("/variants/:variantId", async (req, res, next) => {
+router.put("/variants/:variantId", isAuthenticated,
+  authorizeRole, async (req, res, next) => {
   try {
     if (!mongoose.isValidObjectId(req.params.variantId)) {
       res.status(500).json("Invalid Id");
@@ -212,7 +220,8 @@ router.put("/variants/:variantId", async (req, res, next) => {
 
 // ACTIVATE/DIACTIVATE A VARIENT
 
-router.put("/variants/activate/:variantId", async (req, res, next) => {
+router.put("/variants/activate/:variantId", isAuthenticated,
+  authorizeRole, async (req, res, next) => {
   const { active } = req.body;
   console.log(req.body)
   try {
@@ -236,7 +245,8 @@ router.put("/variants/activate/:variantId", async (req, res, next) => {
 
 // DELETE A VARIENT
 
-router.delete("/variants/:variantId", async (req, res, next) => {
+router.delete("/variants/:variantId", isAuthenticated,
+  authorizeRole, async (req, res, next) => {
   const { variantId } = req.params;
   try {
     if (!mongoose.isValidObjectId(variantId)) {
